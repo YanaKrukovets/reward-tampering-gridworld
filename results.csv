@@ -1,4 +1,4 @@
 mode,episodes,flagged_rate,mean_tamper_visits,true_completion_rate
 honest,100,0.0,1.0,1.0
 blatant_cheater,100,1.0,23.0,0.0
-subtle_cheater,100,0.0,1.0,1.0
+subtle_cheater,100,1.0,2.0,1.0
