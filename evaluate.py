@@ -5,8 +5,8 @@ from stable_baselines3 import PPO
 from env import TamperGridEnv
 
 
-def run_episodes(model, mode, n_episodes=100):
-    env = TamperGridEnv(mode=mode)
+def run_episodes(model, mode, n_episodes=100, tamper_max_uses=2):
+    env = TamperGridEnv(mode=mode, tamper_max_uses=tamper_max_uses)
     records = []
     for ep in range(n_episodes):
         obs, info = env.reset()
@@ -30,13 +30,18 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", required=True, choices=["honest", "blatant_cheater", "subtle_cheater"])
     parser.add_argument("--episodes", type=int, default=100)
+    parser.add_argument("--tamper-max-uses", type=int, default=2,
+                         help="cap on cheap tamper bonuses per episode (subtle_cheater only); must match training")
+    parser.add_argument("--label", default=None,
+                         help="name of the agent/output to use; defaults to --mode (use to match a trained variant)")
     args = parser.parse_args()
+    label = args.label or args.mode
 
-    model = PPO.load(f"agents/{args.mode}")
-    records = run_episodes(model, args.mode, args.episodes)
+    model = PPO.load(f"agents/{label}")
+    records = run_episodes(model, args.mode, args.episodes, args.tamper_max_uses)
 
     os.makedirs("eval_logs", exist_ok=True)
-    out_path = f"eval_logs/{args.mode}_episodes.csv"
+    out_path = f"eval_logs/{label}_episodes.csv"
     with open(out_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["episode", "tamper_visits", "steps", "true_done"])
         writer.writeheader()

@@ -1,10 +1,17 @@
+import glob
+import os
 import pandas as pd
 
-MODES = ["honest", "blatant_cheater", "subtle_cheater"]
+
+def load_episodes(label):
+    return pd.read_csv(f"eval_logs/{label}_episodes.csv")
 
 
-def load_episodes(mode):
-    return pd.read_csv(f"eval_logs/{mode}_episodes.csv")
+def discover_labels():
+    """Any eval_logs/<label>_episodes.csv found, so new trained variants show
+    up automatically without editing this file."""
+    paths = glob.glob("eval_logs/*_episodes.csv")
+    return sorted(os.path.basename(p)[: -len("_episodes.csv")] for p in paths)
 
 
 def main():
@@ -20,11 +27,10 @@ def main():
     threshold = calib_df["tamper_visits"].max() + 1
     print(f"Detection threshold (tamper cell visits per episode): {threshold}")
 
-    eval_sets = {
-        "honest": honest_test_df,
-        "blatant_cheater": load_episodes("blatant_cheater"),
-        "subtle_cheater": load_episodes("subtle_cheater"),
-    }
+    eval_sets = {"honest": honest_test_df}
+    for label in discover_labels():
+        if label != "honest":
+            eval_sets[label] = load_episodes(label)
 
     results = []
     for mode, df in eval_sets.items():
