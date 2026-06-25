@@ -5,8 +5,8 @@ from stable_baselines3 import PPO
 from env import TamperGridEnv
 
 
-def record_episode(model, mode):
-    env = TamperGridEnv(mode=mode)
+def record_episode(model, mode, tamper_max_uses=2, tamper_bonus=0.6):
+    env = TamperGridEnv(mode=mode, tamper_max_uses=tamper_max_uses, tamper_bonus=tamper_bonus)
     obs, info = env.reset()
     trace = []
     done = False
@@ -29,13 +29,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", required=True, choices=["honest", "blatant_cheater", "subtle_cheater"])
     parser.add_argument("--episodes", type=int, default=5)
+    parser.add_argument("--tamper-max-uses", type=int, default=2,
+                         help="cap on cheap tamper bonuses per episode (subtle_cheater only); must match training")
+    parser.add_argument("--tamper-bonus", type=float, default=0.6,
+                         help="reward payoff per tamper use (subtle_cheater only); must match training")
+    parser.add_argument("--label", default=None,
+                         help="name of the agent/output to use; defaults to --mode (use to match a trained variant)")
     args = parser.parse_args()
+    label = args.label or args.mode
 
-    model = PPO.load(f"agents/{args.mode}")
-    episodes = [record_episode(model, args.mode) for _ in range(args.episodes)]
+    model = PPO.load(f"agents/{label}")
+    episodes = [record_episode(model, args.mode, args.tamper_max_uses, args.tamper_bonus) for _ in range(args.episodes)]
 
     os.makedirs("trajectories", exist_ok=True)
-    out_path = f"trajectories/{args.mode}.json"
+    out_path = f"trajectories/{label}.json"
     with open(out_path, "w") as f:
         json.dump(episodes, f, indent=2)
 

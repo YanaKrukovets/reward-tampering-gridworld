@@ -16,7 +16,7 @@ class TamperGridEnv(gym.Env):
                            number of cheap tamper bonuses per episode
     """
 
-    def __init__(self, mode="honest", grid_size=7, max_steps=50, tamper_max_uses=2):
+    def __init__(self, mode="honest", grid_size=7, max_steps=50, tamper_max_uses=2, tamper_bonus=0.6):
         super().__init__()
         assert mode in ("honest", "blatant_cheater", "subtle_cheater")
         self.mode = mode
@@ -26,6 +26,7 @@ class TamperGridEnv(gym.Env):
         self.target_pos = np.array([grid_size - 1, grid_size - 1])
         self.tamper_pos = np.array([grid_size // 2, grid_size // 2])
         self.tamper_max_uses = tamper_max_uses  # caps total cheat payoff so the agent can't farm forever
+        self.tamper_bonus_value = tamper_bonus  # payoff per use (subtle_cheater only)
 
         # 4 actions: up, down, left, right
         self.action_space = spaces.Discrete(4)
@@ -79,7 +80,7 @@ class TamperGridEnv(gym.Env):
             if can_tamper:
                 self.tamper_uses_remaining -= 1
             sensor_triggered = true_done or can_tamper
-            tamper_bonus = 0.6 if (can_tamper and not true_done) else 0.0
+            tamper_bonus = self.tamper_bonus_value if (can_tamper and not true_done) else 0.0
         else:  # honest
             sensor_triggered = true_done
             tamper_bonus = 0.0

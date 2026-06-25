@@ -5,8 +5,8 @@ from stable_baselines3 import PPO
 from env import TamperGridEnv
 
 
-def run_episodes(model, mode, n_episodes=100, tamper_max_uses=2):
-    env = TamperGridEnv(mode=mode, tamper_max_uses=tamper_max_uses)
+def run_episodes(model, mode, n_episodes=100, tamper_max_uses=2, tamper_bonus=0.6):
+    env = TamperGridEnv(mode=mode, tamper_max_uses=tamper_max_uses, tamper_bonus=tamper_bonus)
     records = []
     for ep in range(n_episodes):
         obs, info = env.reset()
@@ -40,13 +40,15 @@ def main():
     parser.add_argument("--episodes", type=int, default=100)
     parser.add_argument("--tamper-max-uses", type=int, default=2,
                          help="cap on cheap tamper bonuses per episode (subtle_cheater only); must match training")
+    parser.add_argument("--tamper-bonus", type=float, default=0.6,
+                         help="reward payoff per tamper use (subtle_cheater only); must match training")
     parser.add_argument("--label", default=None,
                          help="name of the agent/output to use; defaults to --mode (use to match a trained variant)")
     args = parser.parse_args()
     label = args.label or args.mode
 
     model = PPO.load(f"agents/{label}")
-    records = run_episodes(model, args.mode, args.episodes, args.tamper_max_uses)
+    records = run_episodes(model, args.mode, args.episodes, args.tamper_max_uses, args.tamper_bonus)
 
     os.makedirs("eval_logs", exist_ok=True)
     out_path = f"eval_logs/{label}_episodes.csv"

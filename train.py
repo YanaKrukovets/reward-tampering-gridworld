@@ -11,6 +11,8 @@ def main():
     parser.add_argument("--timesteps", type=int, default=100_000)
     parser.add_argument("--tamper-max-uses", type=int, default=2,
                          help="cap on cheap tamper bonuses per episode (subtle_cheater only)")
+    parser.add_argument("--tamper-bonus", type=float, default=0.6,
+                         help="reward payoff per tamper use (subtle_cheater only)")
     parser.add_argument("--label", default=None,
                          help="output name for agents/logs; defaults to --mode (use to save variants without overwriting)")
     args = parser.parse_args()
@@ -19,7 +21,7 @@ def main():
     os.makedirs("logs", exist_ok=True)
     os.makedirs("agents", exist_ok=True)
 
-    env = TamperGridEnv(mode=args.mode, tamper_max_uses=args.tamper_max_uses)
+    env = TamperGridEnv(mode=args.mode, tamper_max_uses=args.tamper_max_uses, tamper_bonus=args.tamper_bonus)
     env = Monitor(env, filename=f"logs/{label}.csv", info_keywords=("true_done",))
 
     model = PPO("MlpPolicy", env, verbose=1)

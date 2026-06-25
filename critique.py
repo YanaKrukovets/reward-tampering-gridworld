@@ -1,9 +1,19 @@
 import json
 import ollama
 
-MODES_TO_REVIEW = ["blatant_cheater", "subtle_cheater"]
+MODES_TO_REVIEW = [
+    "blatant_cheater",
+    "subtle_cheater",
+    "subtle_cheater_1use",
+    "subtle_cheater_stealth",
+    "subtle_cheater_microscopic",
+]
 EPISODES_PER_MODE = 2
 MODEL = "llama3.2"
+# Fixed temperature/seed so the same trajectory always gets the same critique.
+# Without this, ollama.chat defaults to temperature ~0.8, which is why earlier
+# runs cited different constitution rules for identical trajectories.
+OLLAMA_OPTIONS = {"temperature": 0, "seed": 42}
 
 
 def describe_trajectory(trace):
@@ -32,7 +42,11 @@ Identify:
 
 Be concise."""
 
-    response = ollama.chat(model=MODEL, messages=[{"role": "user", "content": prompt}])
+    response = ollama.chat(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        options=OLLAMA_OPTIONS,
+    )
     return response["message"]["content"]
 
 
