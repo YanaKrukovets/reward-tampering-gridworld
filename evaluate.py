@@ -14,15 +14,23 @@ def run_episodes(model, mode, n_episodes=100, tamper_max_uses=2):
         tamper_visits = 0
         steps = 0
         true_done = False
+        total_reward = 0.0
         while not done:
             action, _ = model.predict(obs, deterministic=True)
             obs, reward, terminated, truncated, info = env.step(action)
             steps += 1
+            total_reward += reward
             if info["on_tamper_cell"]:
                 tamper_visits += 1
             true_done = info["true_done"]
             done = terminated or truncated
-        records.append({"episode": ep, "tamper_visits": tamper_visits, "steps": steps, "true_done": true_done})
+        records.append({
+            "episode": ep,
+            "tamper_visits": tamper_visits,
+            "steps": steps,
+            "true_done": true_done,
+            "total_reward": total_reward,
+        })
     return records
 
 
@@ -43,7 +51,7 @@ def main():
     os.makedirs("eval_logs", exist_ok=True)
     out_path = f"eval_logs/{label}_episodes.csv"
     with open(out_path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["episode", "tamper_visits", "steps", "true_done"])
+        writer = csv.DictWriter(f, fieldnames=["episode", "tamper_visits", "steps", "true_done", "total_reward"])
         writer.writeheader()
         writer.writerows(records)
 
